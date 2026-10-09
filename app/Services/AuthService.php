@@ -17,8 +17,11 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 /** Register accounts and keep mobile tokens separate from dashboard sessions. */
 class AuthService
 {
+    /** Inject the existing guest credential lifecycle. */
+    public function __construct(private GuestIdentityService $guestIdentities) {}
+
     /**
-     * @param  array{name: string, email: string, password: string, age: int|string, phone?: ?string, device_name: string}  $data
+     * @param  array{name: string, email: string, password: string, age: int|string, phone?: ?string, device_name: string, guest_token?: string}  $data
      * @return array{user: User, token: string, expires_at: string}
      */
     public function registerMobile(#[\SensitiveParameter] array $data): array
@@ -33,9 +36,13 @@ class AuthService
                 throw ValidationException::withMessages(['email' => 'The email has already been taken.']);
             }
 
-            $identity = $user->worshipIdentities()->make();
-            $identity->public_id = (string) Str::uuid();
-            $identity->save();
+            if (isset($data['guest_token'])) {
+                $this->guestIdentities->claim($user, $data['guest_token']);
+            } else {
+                $identity = $user->worshipIdentities()->make();
+                $identity->public_id = (string) Str::uuid();
+                $identity->save();
+            }
 
             return $this->issueMobileToken($user->fresh(), $data['device_name']);
         });
@@ -48,6 +55,56 @@ class AuthService
     public function loginMobile(#[\SensitiveParameter] array $data): array
     {
         return $this->issueMobileToken($this->validateCredentials($data), $data['device_name']);
+    }
+
+    /**
+     * @param  array{id_token: string, device_name: string, age?: int|string, guest_token?: string}  $data
+     * @return array{user: User, token: string, expires_at: string} Authenticate by verified subject, never by matching email alone.
+     */
+    public function loginGoogle(#[\SensitiveParameter] array $data, GoogleIdTokenService $google): array
+    {
+        $claims = $google->verify($data['id_token']);
+
+        try {
+            return DB::transaction(function () use ($claims, $data): array {
+                $user = User::query()->where('google_id', $claims['sub'])->lockForUpdate()->first();
+
+                if ($user === null) {
+                    // Email ownership alone cannot attach Google to an existing account.
+                    if (User::query()->where('email', $claims['email'])->exists()) {
+                        throw ValidationException::withMessages(['id_token' => 'Unable to sign in with this Google account.']);
+                    }
+                    if (! isset($data['age'])) {
+                        throw ValidationException::withMessages(['age' => 'Age is required to create an account.']);
+                    }
+
+                    $user = new User;
+                    $user->name = $claims['name'];
+                    $user->email = $claims['email'];
+                    $user->google_id = $claims['sub'];
+                    $user->age = $data['age'];
+                    $user->email_verified_at = $claims['authoritative_email'] ? now() : null;
+                    $user->save();
+                    $user->refresh();
+                }
+
+                if ($user->account_status !== AccountStatus::Active) {
+                    throw ValidationException::withMessages(['id_token' => 'Unable to sign in with this Google account.']);
+                }
+
+                if (isset($data['guest_token'])) {
+                    $this->guestIdentities->claim($user, $data['guest_token']);
+                } elseif (! $user->worshipIdentities()->exists()) {
+                    $identity = $user->worshipIdentities()->make();
+                    $identity->public_id = (string) Str::uuid();
+                    $identity->save();
+                }
+
+                return $this->issueMobileToken($user->fresh(), $data['device_name']);
+            });
+        } catch (UniqueConstraintViolationException) {
+            throw ValidationException::withMessages(['id_token' => 'Unable to sign in with this Google account.']);
+        }
     }
 
     /**
@@ -64,6 +121,7 @@ class AuthService
 
         Auth::guard('web')->login($user);
         $request->session()->regenerate();
+        $request->session()->put('password_hash_web', Auth::guard('web')->hashPasswordForCookie($user->getAuthPassword()));
 
         return $user;
     }

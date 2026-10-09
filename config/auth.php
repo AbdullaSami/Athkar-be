@@ -112,6 +112,9 @@ return [
     |
     */
 
+    'password_reset_url' => env('AUTH_PASSWORD_RESET_URL'),
+    'password_reset_mailer' => env('AUTH_PASSWORD_RESET_MAILER', 'smtp'),
+
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
 ];

@@ -2,6 +2,24 @@
 
 return [
 
+    'quran' => [
+        'base_url' => env('QURAN_BASE_URL', 'https://api.alquran.cloud/v1'),
+        'connect_timeout' => 3,
+        'timeout' => 8,
+        'cache_ttl' => ['metadata' => 604800, 'ayahs' => 86400, 'audio' => 86400],
+    ],
+
+    'aladhan' => [
+        'base_url' => env('ALADHAN_BASE_URL', 'https://api.aladhan.com/v1'),
+        'connect_timeout' => 3,
+        'timeout' => 8,
+        'cache_ttl' => ['prayer_times' => 1800, 'calendar' => 86400, 'qibla' => 3600],
+    ],
+
+    'google' => [
+        'client_ids' => array_values(array_filter(array_map('trim', explode(',', (string) env('GOOGLE_CLIENT_IDS', ''))))),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Third Party Services

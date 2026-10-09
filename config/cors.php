@@ -8,7 +8,7 @@ return [
         fn (string $origin): bool => preg_match('/^https?:\/\/[^\s\/]+$/D', $origin) === 1 && ! str_contains($origin, '*'),
     )),
     'allowed_origins_patterns' => [],
-    'allowed_headers' => ['Accept', 'Authorization', 'Content-Type', 'X-CSRF-TOKEN', 'X-XSRF-TOKEN', 'X-Requested-With'],
+    'allowed_headers' => ['Accept', 'Authorization', 'Content-Type', 'X-CSRF-TOKEN', 'X-XSRF-TOKEN', 'X-Requested-With', 'X-Guest-Token'],
     'exposed_headers' => ['Retry-After'],
     'max_age' => 600,
     'supports_credentials' => true,

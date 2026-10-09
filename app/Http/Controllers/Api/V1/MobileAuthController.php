@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\EmptyAuthRequest;
+use App\Http\Requests\Auth\GoogleLoginRequest;
 use App\Http\Requests\Auth\MobileLoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Resources\UserResource;
 use App\Services\AuthService;
+use App\Services\GoogleIdTokenService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 
@@ -32,6 +34,17 @@ class MobileAuthController extends Controller
     public function login(MobileLoginRequest $request): JsonResponse
     {
         $result = $this->authService->loginMobile($request->validated());
+
+        return response()->json(['data' => [
+            'user' => (new UserResource($result['user']))->resolve($request),
+            'token' => $result['token'], 'token_type' => 'Bearer', 'expires_at' => $result['expires_at'],
+        ]])->header('Cache-Control', 'no-store');
+    }
+
+    /** Exchange a verified Google ID token for one expiring mobile credential. */
+    public function google(GoogleLoginRequest $request, GoogleIdTokenService $google): JsonResponse
+    {
+        $result = $this->authService->loginGoogle($request->validated(), $google);
 
         return response()->json(['data' => [
             'user' => (new UserResource($result['user']))->resolve($request),

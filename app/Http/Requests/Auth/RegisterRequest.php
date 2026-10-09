@@ -17,6 +17,7 @@ class RegisterRequest extends StrictAuthRequest
             'phone' => ['sometimes', 'nullable', 'string', 'max:16', 'regex:/^\+[1-9][0-9]{7,14}$/'],
             'password' => [...$this->passwordRules(), 'min:12', 'confirmed'],
             'password_confirmation' => $this->passwordRules(),
+            'guest_token' => ['sometimes', 'required', 'string', 'size:64', 'regex:/^[A-Za-z0-9]{64}$/D'],
             'device_name' => ['required', 'string', 'max:100'],
         ];
     }

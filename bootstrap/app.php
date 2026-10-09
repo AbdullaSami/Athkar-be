@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\AuthenticateGuestIdentity;
 use App\Http\Middleware\EnsureActiveAccount;
 use App\Http\Middleware\RequireCsrfToken;
 use App\Http\Middleware\RequireDashboardSession;
@@ -11,6 +12,7 @@ use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\ValidationException;
+use Laravel\Sanctum\Http\Middleware\AuthenticateSession;
 use Symfony\Component\HttpFoundation\Response;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -29,15 +31,18 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->statefulApi();
+        $middleware->trimStrings(except: ['guest_token', 'token', 'id_token', 'text', 'source', 'virtue', 'description', 'explanation']);
         $middleware->redirectGuestsTo(fn (Request $request): ?string => $request->is('api/*') ? null : '/');
-        $middleware->web(replace: [PreventRequestForgery::class => RequireCsrfToken::class]);
+        $middleware->web(append: [AuthenticateSession::class], replace: [PreventRequestForgery::class => RequireCsrfToken::class]);
         $middleware->alias([
+            'guest.identity' => AuthenticateGuestIdentity::class,
             'account.active' => EnsureActiveAccount::class,
             'mobile.token' => RequireMobileToken::class,
             'dashboard.session' => RequireDashboardSession::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        $exceptions->dontFlash(['guest_token', 'token', 'id_token']);
         $exceptions->respond(function (Response $response, Throwable $exception, Request $request): Response {
             if (! $request->is('api/*') && ! $request->expectsJson()) {
                 return $response;
