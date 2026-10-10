@@ -22,7 +22,7 @@ class AppServiceProvider extends ServiceProvider
     /** Register endpoint-specific limits without recording raw email addresses. */
     public function boot(): void
     {
-        foreach (['prayer-times' => 60, 'islamic-calendar' => 60, 'qibla' => 30, 'quran' => 90] as $feature => $requests) {
+        foreach (['prayer-times' => 60, 'islamic-calendar' => 60, 'qibla' => 30, 'quran' => 90, 'asma-al-husna' => 60] as $feature => $requests) {
             RateLimiter::for($feature, function (Request $request) use ($feature, $requests): Limit {
                 $user = Auth::guard('sanctum')->user();
 

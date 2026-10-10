@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AllahNameController;
 use App\Http\Controllers\Api\V1\CategoryController;
 use App\Http\Controllers\Api\V1\DhikrController;
 use App\Http\Controllers\Api\V1\GuestIdentityController;
@@ -28,6 +29,10 @@ Route::pattern('bookmark', '[1-9][0-9]{0,17}');
 Route::pattern('favorite', '[1-9][0-9]{0,17}');
 
 Route::prefix('v1')->name('api.v1.')->group(function (): void {
+    Route::middleware('throttle:asma-al-husna')->name('asma-al-husna.')->group(function (): void {
+        Route::get('asma-al-husna', [AllahNameController::class, 'index'])->name('index');
+        Route::get('asma-al-husna/{number}', [AllahNameController::class, 'show'])->where('number', '[1-9][0-9]?')->name('show');
+    });
     Route::prefix('quran')->name('quran.')->middleware('throttle:quran')->group(function (): void {
         Route::get('surahs', [QuranSurahController::class, 'index'])->name('surahs.index');
         Route::get('surahs/{surah}', [QuranSurahController::class, 'show'])->where('surah', '[1-9][0-9]{0,2}')->name('surahs.show');
