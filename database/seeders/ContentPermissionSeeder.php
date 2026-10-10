@@ -11,7 +11,7 @@ class ContentPermissionSeeder extends Seeder
     /** Idempotently register the dashboard, user overview, editing and publishing permissions. */
     public function run(): void
     {
-        foreach (['access-dashboard', 'view-users', 'manage-content', 'publish-content'] as $permission) {
+        foreach (['access-dashboard', 'view-users', 'manage-roles', 'manage-content', 'publish-content'] as $permission) {
             Permission::findOrCreate($permission, 'web');
         }
     }
