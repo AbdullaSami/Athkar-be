@@ -115,6 +115,9 @@ return [
     'password_reset_url' => env('AUTH_PASSWORD_RESET_URL'),
     'password_reset_mailer' => env('AUTH_PASSWORD_RESET_MAILER', 'smtp'),
 
+    // Explicit local/testing demo seeders only; never supply a committed password.
+    'seed_account_password' => env('SEED_ACCOUNT_PASSWORD'),
+
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
 ];
