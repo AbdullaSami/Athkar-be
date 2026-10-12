@@ -8,10 +8,12 @@ use Spatie\Permission\Models\Permission;
 /** Create permission definitions only; never grant privileges to existing accounts. */
 class ContentPermissionSeeder extends Seeder
 {
-    /** Idempotently register the dashboard, user overview, editing and publishing permissions. */
+    public const PERMISSIONS = ['access-dashboard', 'view-users', 'view-analytics', 'manage-roles', 'manage-content', 'publish-content'];
+
+    /** Idempotently register the dashboard, analytics, overview and content permissions. */
     public function run(): void
     {
-        foreach (['access-dashboard', 'view-users', 'manage-roles', 'manage-content', 'publish-content'] as $permission) {
+        foreach (self::PERMISSIONS as $permission) {
             Permission::findOrCreate($permission, 'web');
         }
     }
