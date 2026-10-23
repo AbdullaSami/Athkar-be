@@ -24,7 +24,7 @@ test('production seeding is repeatable and never creates users or grants privile
     $this->seed(DatabaseSeeder::class);
 
     $this->assertDatabaseCount('users', 1);
-    $this->assertDatabaseCount('permissions', 6);
+    $this->assertDatabaseCount('permissions', 7);
     $this->assertDatabaseCount('allah_names', 99);
     $this->assertDatabaseCount('model_has_permissions', 0);
     $this->assertDatabaseCount('model_has_roles', 0);
@@ -41,7 +41,7 @@ test('explicit bootstrap promotes only the existing target without changing cred
     $this->artisan('admin:bootstrap', ['email' => '  '.strtoupper($user->email).'  ', '--force' => true, '--no-interaction' => true])->assertSuccessful();
 
     expect($user->fresh()->getAllPermissions()->pluck('name')->sort()->values()->all())->toBe([
-        'access-dashboard', 'manage-content', 'manage-roles', 'publish-content', 'view-analytics', 'view-users',
+        'access-dashboard', 'manage-content', 'manage-roles', 'manage-users', 'publish-content', 'view-analytics', 'view-users',
     ]);
     expect($user->fresh()->password)->toBe($password);
     expect($other->fresh()->can('access-dashboard'))->toBeFalse();

@@ -8,7 +8,7 @@ use Spatie\Permission\Models\Permission;
 /** Create permission definitions only; never grant privileges to existing accounts. */
 class ContentPermissionSeeder extends Seeder
 {
-    public const PERMISSIONS = ['access-dashboard', 'view-users', 'view-analytics', 'manage-roles', 'manage-content', 'publish-content'];
+    public const PERMISSIONS = ['access-dashboard', 'view-users', 'manage-users', 'view-analytics', 'manage-roles', 'manage-content', 'publish-content'];
 
     /** Idempotently register the dashboard, analytics, overview and content permissions. */
     public function run(): void

@@ -3,7 +3,7 @@
     "_postman_id": "e52842b0-70b9-4518-9ab4-3ba796d18456",
     "name": "Athkar API",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "description": "Import this collection and Athkar.local.postman_environment.json, then select that environment. Set base_url (no trailing slash), mobile credentials and admin credentials locally. Secrets are intentionally empty in exports. Mobile and admin are separate top-level folders. Admin: CSRF Cookie -> Login -> selected request; cookie jar must stay enabled. Mobile: Register/Login captures mobile_token, Create Guest Identity captures guest_token. Create operations capture separate owned IDs. Sample numeric defaults are Quran references only; set public content IDs to existing published records. Set optional media paths from successful uploads. All mutation requests are explicit: do not run the whole collection against production. No requests were executed while creating this collection. Scripts assert success status and capture response values without logging secrets. Postman cookie scripting reference: https://learning.postman.com/latest-v-12/docs/tests-and-scripts/write-scripts/postman-sandbox-reference/pm-cookies\n\nMOBILE TESTING: Guest — No Account Required for anonymous use; Logged In — Mobile Bearer Token for accounts; Public APIs for both. Optional Transfer requires a logged-in account. Runnable Scenarios create unique synthetic accounts and temporary Wird: run one scenario folder against development only. Scenario secrets use separate scenario_* environment variables and are cleared afterward."
+    "description": "Import this collection and Athkar.local.postman_environment.json, then select that environment. Set base_url (no trailing slash), mobile credentials and admin credentials locally. Secrets are intentionally empty in exports. Mobile and admin are separate top-level folders. Admin: CSRF Cookie -> Login -> selected request; cookie jar must stay enabled. Mobile: Register/Login captures mobile_token, Create Guest Identity captures guest_token. Create operations capture separate owned IDs. Sample numeric defaults are Quran references only; set public content IDs to existing published records. Set optional media paths from successful uploads. All mutation requests are explicit: do not run the whole collection against production. No requests were executed while creating this collection. Scripts assert success status and capture response values without logging secrets. Postman cookie scripting reference: https://learning.postman.com/latest-v-12/docs/tests-and-scripts/write-scripts/postman-sandbox-reference/pm-cookies\n\nMOBILE TESTING: Guest — No Account Required for anonymous use; Logged In — Mobile Bearer Token for accounts; Public APIs for both. Optional Transfer requires a logged-in account. Runnable Scenarios create unique synthetic accounts and temporary Wird: run one scenario folder against development only. Scenario secrets use separate scenario_* environment variables and are cleared afterward.\nADMIN USERS: Users folder supports CRUD and web-role replacement. Run the independent admin user scenario with an administrator holding manage-users, manage-roles, view-users and manage-content. Run php artisan db:seed --class=ContentPermissionSeeder to define new permissions; explicit local AdminSeeder invocation upgrades the existing complete demo administrator."
   },
   "item": [
     {
@@ -5937,71 +5937,6 @@
               "id": "8f03d810-6953-5f79-8082-651e48f5920d"
             },
             {
-              "name": "Registered Users",
-              "request": {
-                "method": "GET",
-                "header": [
-                  {
-                    "key": "Accept",
-                    "value": "application/json"
-                  },
-                  {
-                    "key": "Origin",
-                    "value": "{{dashboard_origin}}"
-                  },
-                  {
-                    "key": "Referer",
-                    "value": "{{dashboard_origin}}/"
-                  },
-                  {
-                    "key": "X-Requested-With",
-                    "value": "XMLHttpRequest"
-                  }
-                ],
-                "url": {
-                  "raw": "{{base_url}}/api/v1/admin/users?page=1&per_page=20",
-                  "host": [
-                    "{{base_url}}"
-                  ],
-                  "path": [
-                    "api",
-                    "v1",
-                    "admin",
-                    "users"
-                  ],
-                  "query": [
-                    {
-                      "key": "page",
-                      "value": "1"
-                    },
-                    {
-                      "key": "per_page",
-                      "value": "20"
-                    }
-                  ]
-                },
-                "auth": {
-                  "type": "noauth"
-                },
-                "description": "Requires view-users. Counts represent stored accounts/identities and current content, not unique visitors or historical usage."
-              },
-              "response": [],
-              "event": [
-                {
-                  "listen": "test",
-                  "script": {
-                    "type": "text/javascript",
-                    "exec": [
-                      "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
-                      "const xsrfHeader = pm.response.headers.all().find(h => h.key.toLowerCase() === \"set-cookie\" && h.value.startsWith(\"XSRF-TOKEN=\"));",
-                      "if (xsrfHeader) pm.environment.set(\"xsrf_token\", decodeURIComponent(xsrfHeader.value.split(\";\")[0].slice(\"XSRF-TOKEN=\".length)));"
-                    ]
-                  }
-                }
-              ],
-              "id": "2ca305e4-dec2-56ab-8553-04a9f1b0b058"
-            },
-            {
               "name": "Guest Identities",
               "request": {
                 "method": "GET",
@@ -6123,6 +6058,1839 @@
             }
           ],
           "id": "d7173fee-f868-517e-937d-b8b0080f8c05"
+        },
+        {
+          "name": "Users",
+          "description": "Read: view-users. CRUD: manage-users. Role replacement: manage-users AND manage-roles. Self-modification/deletion and mutation of users with permissions beyond your own return 403. Deletion permanently removes owned worship/Quran data. Credential/status/role changes revoke target tokens and database sessions. Existing direct permissions are preserved by role replacement.",
+          "item": [
+            {
+              "name": "Registered Users",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Origin",
+                    "value": "{{dashboard_origin}}"
+                  },
+                  {
+                    "key": "Referer",
+                    "value": "{{dashboard_origin}}/"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/users?page=1&per_page=20",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "users"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "per_page",
+                      "value": "20"
+                    }
+                  ]
+                },
+                "auth": {
+                  "type": "noauth"
+                },
+                "description": "Requires view-users. Counts represent stored accounts/identities and current content, not unique visitors or historical usage."
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                      "const xsrfHeader = pm.response.headers.all().find(h => h.key.toLowerCase() === \"set-cookie\" && h.value.startsWith(\"XSRF-TOKEN=\"));",
+                      "if (xsrfHeader) pm.environment.set(\"xsrf_token\", decodeURIComponent(xsrfHeader.value.split(\";\")[0].slice(\"XSRF-TOKEN=\".length)));"
+                    ]
+                  }
+                }
+              ],
+              "id": "d3a6c73e-09e6-5d83-bcaf-1c989a37f4f7"
+            },
+            {
+              "name": "Create User",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Origin",
+                    "value": "{{dashboard_origin}}"
+                  },
+                  {
+                    "key": "Referer",
+                    "value": "{{dashboard_origin}}/"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/users",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "users"
+                  ]
+                },
+                "auth": {
+                  "type": "noauth"
+                },
+                "description": "Creates an ordinary active account with no roles. Set a unique managed_user_email and a 12+ character managed_user_password.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Managed Test User\",\n  \"email\": \"{{managed_user_email}}\",\n  \"age\": 25,\n  \"phone\": null,\n  \"account_status\": \"active\",\n  \"password\": \"{{managed_user_password}}\",\n  \"password_confirmation\": \"{{managed_user_password}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (!pm.variables.get(\"base_url\")) throw new Error(\"Set base_url first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");",
+                      "if (!pm.variables.get(\"dashboard_origin\")) throw new Error(\"Set dashboard_origin first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");",
+                      "if (!pm.variables.get(\"managed_user_email\")) throw new Error(\"Set managed_user_email first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");",
+                      "if (!pm.variables.get(\"managed_user_password\")) throw new Error(\"Set managed_user_password first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });",
+                      "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                      "  pm.environment.set(\"managed_user_id\", pm.response.json().data.id);",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "id": "8caa5ce5-c795-5305-9b2c-2bfb7c0ea09d"
+            },
+            {
+              "name": "Show User",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Origin",
+                    "value": "{{dashboard_origin}}"
+                  },
+                  {
+                    "key": "Referer",
+                    "value": "{{dashboard_origin}}/"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/users/{{managed_user_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "users",
+                    "{{managed_user_id}}"
+                  ]
+                },
+                "auth": {
+                  "type": "noauth"
+                },
+                "description": "Requires view-users. Returns profile and web roles, never credentials or private worship data."
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (!pm.variables.get(\"base_url\")) throw new Error(\"Set base_url first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");",
+                      "if (!pm.variables.get(\"dashboard_origin\")) throw new Error(\"Set dashboard_origin first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");",
+                      "if (!pm.variables.get(\"managed_user_id\")) throw new Error(\"Set managed_user_id first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });"
+                    ]
+                  }
+                }
+              ],
+              "id": "8fad5e79-ccaa-5772-a84a-ae4bfaad3cc1"
+            },
+            {
+              "name": "PUT Update User",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Origin",
+                    "value": "{{dashboard_origin}}"
+                  },
+                  {
+                    "key": "Referer",
+                    "value": "{{dashboard_origin}}/"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/users/{{managed_user_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "users",
+                    "{{managed_user_id}}"
+                  ]
+                },
+                "auth": {
+                  "type": "noauth"
+                },
+                "description": "Requires name, email and age. Password may be omitted to preserve it.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Managed Test User\",\n  \"email\": \"{{managed_user_email}}\",\n  \"age\": 25,\n  \"phone\": null,\n  \"account_status\": \"active\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (!pm.variables.get(\"base_url\")) throw new Error(\"Set base_url first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");",
+                      "if (!pm.variables.get(\"dashboard_origin\")) throw new Error(\"Set dashboard_origin first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");",
+                      "if (!pm.variables.get(\"managed_user_email\")) throw new Error(\"Set managed_user_email first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");",
+                      "if (!pm.variables.get(\"managed_user_id\")) throw new Error(\"Set managed_user_id first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });"
+                    ]
+                  }
+                }
+              ],
+              "id": "d0a0f29d-ea18-56a7-b44a-7764c14e7d1c"
+            },
+            {
+              "name": "PATCH Update User",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Origin",
+                    "value": "{{dashboard_origin}}"
+                  },
+                  {
+                    "key": "Referer",
+                    "value": "{{dashboard_origin}}/"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/users/{{managed_user_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "users",
+                    "{{managed_user_id}}"
+                  ]
+                },
+                "auth": {
+                  "type": "noauth"
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Updated Managed User\",\n  \"phone\": \"+201234567890\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (!pm.variables.get(\"base_url\")) throw new Error(\"Set base_url first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");",
+                      "if (!pm.variables.get(\"dashboard_origin\")) throw new Error(\"Set dashboard_origin first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");",
+                      "if (!pm.variables.get(\"managed_user_id\")) throw new Error(\"Set managed_user_id first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });"
+                    ]
+                  }
+                }
+              ],
+              "id": "61796076-f208-52ca-b80a-a151ba636033"
+            },
+            {
+              "name": "Change User Password",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Origin",
+                    "value": "{{dashboard_origin}}"
+                  },
+                  {
+                    "key": "Referer",
+                    "value": "{{dashboard_origin}}/"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/users/{{managed_user_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "users",
+                    "{{managed_user_id}}"
+                  ]
+                },
+                "auth": {
+                  "type": "noauth"
+                },
+                "description": "Revokes target credentials and reset proofs. Does not expose the hash.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"password\": \"{{managed_user_password}}\",\n  \"password_confirmation\": \"{{managed_user_password}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (!pm.variables.get(\"base_url\")) throw new Error(\"Set base_url first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");",
+                      "if (!pm.variables.get(\"dashboard_origin\")) throw new Error(\"Set dashboard_origin first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");",
+                      "if (!pm.variables.get(\"managed_user_id\")) throw new Error(\"Set managed_user_id first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");",
+                      "if (!pm.variables.get(\"managed_user_password\")) throw new Error(\"Set managed_user_password first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });"
+                    ]
+                  }
+                }
+              ],
+              "id": "af21a02a-804b-522c-8c8d-e35d4f3be1cc"
+            },
+            {
+              "name": "Suspend User",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Origin",
+                    "value": "{{dashboard_origin}}"
+                  },
+                  {
+                    "key": "Referer",
+                    "value": "{{dashboard_origin}}/"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/users/{{managed_user_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "users",
+                    "{{managed_user_id}}"
+                  ]
+                },
+                "auth": {
+                  "type": "noauth"
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"account_status\": \"suspended\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (!pm.variables.get(\"base_url\")) throw new Error(\"Set base_url first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");",
+                      "if (!pm.variables.get(\"dashboard_origin\")) throw new Error(\"Set dashboard_origin first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");",
+                      "if (!pm.variables.get(\"managed_user_id\")) throw new Error(\"Set managed_user_id first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });"
+                    ]
+                  }
+                }
+              ],
+              "id": "d0a0bb5c-1f8d-55db-b40d-6a2fbdf7611a"
+            },
+            {
+              "name": "Activate User",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Origin",
+                    "value": "{{dashboard_origin}}"
+                  },
+                  {
+                    "key": "Referer",
+                    "value": "{{dashboard_origin}}/"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/users/{{managed_user_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "users",
+                    "{{managed_user_id}}"
+                  ]
+                },
+                "auth": {
+                  "type": "noauth"
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"account_status\": \"active\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (!pm.variables.get(\"base_url\")) throw new Error(\"Set base_url first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");",
+                      "if (!pm.variables.get(\"dashboard_origin\")) throw new Error(\"Set dashboard_origin first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");",
+                      "if (!pm.variables.get(\"managed_user_id\")) throw new Error(\"Set managed_user_id first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });"
+                    ]
+                  }
+                }
+              ],
+              "id": "0af5e61c-ba90-52e1-8494-e16463ed8527"
+            },
+            {
+              "name": "Assign or Replace User Roles",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Origin",
+                    "value": "{{dashboard_origin}}"
+                  },
+                  {
+                    "key": "Referer",
+                    "value": "{{dashboard_origin}}/"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/users/{{managed_user_id}}/roles",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "users",
+                    "{{managed_user_id}}",
+                    "roles"
+                  ]
+                },
+                "auth": {
+                  "type": "noauth"
+                },
+                "description": "Requires manage-users and manage-roles. Replaces existing roles. Every role must use web guard and contain only permissions you hold. Does not edit direct permissions.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"role_ids\": [\n    \"{{role_id}}\"\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (!pm.variables.get(\"base_url\")) throw new Error(\"Set base_url first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");",
+                      "if (!pm.variables.get(\"dashboard_origin\")) throw new Error(\"Set dashboard_origin first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");",
+                      "if (!pm.variables.get(\"managed_user_id\")) throw new Error(\"Set managed_user_id first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");",
+                      "if (!pm.variables.get(\"role_id\")) throw new Error(\"Set role_id first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });"
+                    ]
+                  }
+                }
+              ],
+              "id": "40a6444c-6e5b-5dba-93f0-1db2ec3b326f"
+            },
+            {
+              "name": "Remove All User Roles",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Origin",
+                    "value": "{{dashboard_origin}}"
+                  },
+                  {
+                    "key": "Referer",
+                    "value": "{{dashboard_origin}}/"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/users/{{managed_user_id}}/roles",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "users",
+                    "{{managed_user_id}}",
+                    "roles"
+                  ]
+                },
+                "auth": {
+                  "type": "noauth"
+                },
+                "description": "Explicitly replaces the role set with an empty array; direct permissions remain unchanged.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"role_ids\": []\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (!pm.variables.get(\"base_url\")) throw new Error(\"Set base_url first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");",
+                      "if (!pm.variables.get(\"dashboard_origin\")) throw new Error(\"Set dashboard_origin first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");",
+                      "if (!pm.variables.get(\"managed_user_id\")) throw new Error(\"Set managed_user_id first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });"
+                    ]
+                  }
+                }
+              ],
+              "id": "0d0e0d4d-713f-54a8-8c2c-e4db2f9ab838"
+            },
+            {
+              "name": "Delete User",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Origin",
+                    "value": "{{dashboard_origin}}"
+                  },
+                  {
+                    "key": "Referer",
+                    "value": "{{dashboard_origin}}/"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/users/{{managed_user_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "users",
+                    "{{managed_user_id}}"
+                  ]
+                },
+                "auth": {
+                  "type": "noauth"
+                },
+                "description": "Permanent deletion including owned data. Cannot delete your own account or a more privileged account."
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (!pm.variables.get(\"base_url\")) throw new Error(\"Set base_url first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");",
+                      "if (!pm.variables.get(\"dashboard_origin\")) throw new Error(\"Set dashboard_origin first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");",
+                      "if (!pm.variables.get(\"managed_user_id\")) throw new Error(\"Set managed_user_id first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"HTTP 204\", function () { pm.response.to.have.status(204); });"
+                    ]
+                  }
+                }
+              ],
+              "id": "8af3b9f1-b667-5a98-a6e4-63c7dcd2b564"
+            }
+          ],
+          "id": "5334d707-e643-5092-a66a-714e692a85d1"
+        },
+        {
+          "name": "Runnable Scenario — User CRUD and Roles",
+          "description": "Development only. Run this folder alone. Uses an existing admin with all seeded permissions. Creates and deletes a temporary user and role; your admin account is never targeted. Import the environment, set admin_email/admin_password and base_url. Scenario-only credentials are generated and cleared automatically.",
+          "item": [
+            {
+              "name": "CSRF Cookie",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Origin",
+                    "value": "{{dashboard_origin}}"
+                  },
+                  {
+                    "key": "Referer",
+                    "value": "{{dashboard_origin}}/"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/sanctum/csrf-cookie",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "sanctum",
+                    "csrf-cookie"
+                  ]
+                },
+                "auth": {
+                  "type": "noauth"
+                },
+                "description": "Run first. Postman stores the session and XSRF cookies. The response script captures the decoded token for browser writes. Keep the cookie jar enabled."
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "const suffix = pm.variables.replaceIn(\"{{$guid}}\");",
+                      "pm.environment.set(\"scenario_managed_user_email\", \"managed-\" + suffix + \"@example.test\");",
+                      "pm.environment.set(\"scenario_managed_user_password\", \"Test-\" + suffix + \"-Aa9!\");",
+                      "pm.environment.set(\"scenario_managed_role_name\", \"Postman editor \" + suffix);",
+                      "for (const key of [\"scenario_managed_user_id\", \"scenario_managed_role_id\"]) pm.environment.unset(key);"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"HTTP 204\", function () { pm.response.to.have.status(204); });",
+                      "const xsrfHeader = pm.response.headers.all().find(h => h.key.toLowerCase() === \"set-cookie\" && h.value.startsWith(\"XSRF-TOKEN=\"));",
+                      "if (xsrfHeader) pm.environment.set(\"xsrf_token\", decodeURIComponent(xsrfHeader.value.split(\";\")[0].slice(\"XSRF-TOKEN=\".length)));",
+                      "pm.test(\"CSRF cookie captured\", function () { pm.expect(pm.environment.get(\"xsrf_token\")).to.be.a(\"string\").and.not.empty; });"
+                    ]
+                  }
+                }
+              ],
+              "id": "3871e322-16f2-5a6c-a502-01b1ad9c068f"
+            },
+            {
+              "name": "Login",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Origin",
+                    "value": "{{dashboard_origin}}"
+                  },
+                  {
+                    "key": "Referer",
+                    "value": "{{dashboard_origin}}/"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/auth/login",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "auth",
+                    "login"
+                  ]
+                },
+                "auth": {
+                  "type": "noauth"
+                },
+                "description": "Requires access-dashboard. For initial setup, register an account then explicitly run php artisan admin:bootstrap <email> on the server. Session authentication does not issue a bearer token.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"{{admin_password}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                      "const xsrfHeader = pm.response.headers.all().find(h => h.key.toLowerCase() === \"set-cookie\" && h.value.startsWith(\"XSRF-TOKEN=\"));",
+                      "if (xsrfHeader) pm.environment.set(\"xsrf_token\", decodeURIComponent(xsrfHeader.value.split(\";\")[0].slice(\"XSRF-TOKEN=\".length)));"
+                    ]
+                  }
+                }
+              ],
+              "id": "9a67a0ee-7aa3-536d-ae79-7401321a43f0"
+            },
+            {
+              "name": "Create Role",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Origin",
+                    "value": "{{dashboard_origin}}"
+                  },
+                  {
+                    "key": "Referer",
+                    "value": "{{dashboard_origin}}/"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/roles",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "roles"
+                  ]
+                },
+                "auth": {
+                  "type": "noauth"
+                },
+                "description": "Requires manage-roles. Only caller-held permissions can be granted. Does not assign this role to accounts.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"{{scenario_managed_role_name}}\",\n  \"permissions\": [\n    \"manage-content\"\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });",
+                      "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                      "  const value = pm.response.json().data.id;",
+                      "  if (value !== undefined && value !== null) pm.environment.set(\"scenario_managed_role_id\", value);",
+                      "}",
+                      "const xsrfHeader = pm.response.headers.all().find(h => h.key.toLowerCase() === \"set-cookie\" && h.value.startsWith(\"XSRF-TOKEN=\"));",
+                      "if (xsrfHeader) pm.environment.set(\"xsrf_token\", decodeURIComponent(xsrfHeader.value.split(\";\")[0].slice(\"XSRF-TOKEN=\".length)));"
+                    ]
+                  }
+                }
+              ],
+              "id": "27551745-9b7a-5c30-bace-c49979a31ec7"
+            },
+            {
+              "name": "Create User",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Origin",
+                    "value": "{{dashboard_origin}}"
+                  },
+                  {
+                    "key": "Referer",
+                    "value": "{{dashboard_origin}}/"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/users",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "users"
+                  ]
+                },
+                "auth": {
+                  "type": "noauth"
+                },
+                "description": "Creates an ordinary active account with no roles. Set a unique scenario_managed_user_email and a 12+ character scenario_managed_user_password.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Managed Test User\",\n  \"email\": \"{{scenario_managed_user_email}}\",\n  \"age\": 25,\n  \"phone\": null,\n  \"account_status\": \"active\",\n  \"password\": \"{{scenario_managed_user_password}}\",\n  \"password_confirmation\": \"{{scenario_managed_user_password}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (!pm.variables.get(\"base_url\")) throw new Error(\"Set base_url first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");",
+                      "if (!pm.variables.get(\"dashboard_origin\")) throw new Error(\"Set dashboard_origin first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");",
+                      "if (!pm.variables.get(\"scenario_managed_user_email\")) throw new Error(\"Set scenario_managed_user_email first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");",
+                      "if (!pm.variables.get(\"scenario_managed_user_password\")) throw new Error(\"Set scenario_managed_user_password first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });",
+                      "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                      "  pm.environment.set(\"scenario_managed_user_id\", pm.response.json().data.id);",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "id": "cd0fad95-cce7-5d6a-a3b5-3c459b125428"
+            },
+            {
+              "name": "Show User",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Origin",
+                    "value": "{{dashboard_origin}}"
+                  },
+                  {
+                    "key": "Referer",
+                    "value": "{{dashboard_origin}}/"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/users/{{scenario_managed_user_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "users",
+                    "{{scenario_managed_user_id}}"
+                  ]
+                },
+                "auth": {
+                  "type": "noauth"
+                },
+                "description": "Requires view-users. Returns profile and web roles, never credentials or private worship data."
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (!pm.variables.get(\"base_url\")) throw new Error(\"Set base_url first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");",
+                      "if (!pm.variables.get(\"dashboard_origin\")) throw new Error(\"Set dashboard_origin first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");",
+                      "if (!pm.variables.get(\"scenario_managed_user_id\")) throw new Error(\"Set scenario_managed_user_id first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });"
+                    ]
+                  }
+                }
+              ],
+              "id": "1c1bc93e-fc48-5977-bca3-1697d1bc7334"
+            },
+            {
+              "name": "PATCH Update User",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Origin",
+                    "value": "{{dashboard_origin}}"
+                  },
+                  {
+                    "key": "Referer",
+                    "value": "{{dashboard_origin}}/"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/users/{{scenario_managed_user_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "users",
+                    "{{scenario_managed_user_id}}"
+                  ]
+                },
+                "auth": {
+                  "type": "noauth"
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Updated Managed User\",\n  \"phone\": \"+201234567890\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (!pm.variables.get(\"base_url\")) throw new Error(\"Set base_url first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");",
+                      "if (!pm.variables.get(\"dashboard_origin\")) throw new Error(\"Set dashboard_origin first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");",
+                      "if (!pm.variables.get(\"scenario_managed_user_id\")) throw new Error(\"Set scenario_managed_user_id first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });"
+                    ]
+                  }
+                }
+              ],
+              "id": "8e4e7ec1-4656-5a55-aad5-0f760a390e84"
+            },
+            {
+              "name": "Assign or Replace User Roles",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Origin",
+                    "value": "{{dashboard_origin}}"
+                  },
+                  {
+                    "key": "Referer",
+                    "value": "{{dashboard_origin}}/"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/users/{{scenario_managed_user_id}}/roles",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "users",
+                    "{{scenario_managed_user_id}}",
+                    "roles"
+                  ]
+                },
+                "auth": {
+                  "type": "noauth"
+                },
+                "description": "Requires manage-users and manage-roles. Replaces existing roles. Every role must use web guard and contain only permissions you hold. Does not edit direct permissions.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"role_ids\": [\n    \"{{scenario_managed_role_id}}\"\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (!pm.variables.get(\"base_url\")) throw new Error(\"Set base_url first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");",
+                      "if (!pm.variables.get(\"dashboard_origin\")) throw new Error(\"Set dashboard_origin first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");",
+                      "if (!pm.variables.get(\"scenario_managed_user_id\")) throw new Error(\"Set scenario_managed_user_id first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");",
+                      "if (!pm.variables.get(\"scenario_managed_role_id\")) throw new Error(\"Set scenario_managed_role_id first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });"
+                    ]
+                  }
+                }
+              ],
+              "id": "8b188046-2797-57c4-9703-ae7147f8e672"
+            },
+            {
+              "name": "Verify Assigned Role",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Origin",
+                    "value": "{{dashboard_origin}}"
+                  },
+                  {
+                    "key": "Referer",
+                    "value": "{{dashboard_origin}}/"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/users/{{scenario_managed_user_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "users",
+                    "{{scenario_managed_user_id}}"
+                  ]
+                },
+                "auth": {
+                  "type": "noauth"
+                },
+                "description": "Requires view-users. Returns profile and web roles, never credentials or private worship data."
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (!pm.variables.get(\"base_url\")) throw new Error(\"Set base_url first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");",
+                      "if (!pm.variables.get(\"dashboard_origin\")) throw new Error(\"Set dashboard_origin first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");",
+                      "if (!pm.variables.get(\"scenario_managed_user_id\")) throw new Error(\"Set scenario_managed_user_id first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                      "pm.test(\"Role assigned\", function () { pm.expect(pm.response.json().data.roles.map(r => String(r.id))).to.include(String(pm.environment.get(\"scenario_managed_role_id\"))); });"
+                    ]
+                  }
+                }
+              ],
+              "id": "10d10d65-e622-5710-b9a0-2ae1de93d0e1"
+            },
+            {
+              "name": "Suspend User",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Origin",
+                    "value": "{{dashboard_origin}}"
+                  },
+                  {
+                    "key": "Referer",
+                    "value": "{{dashboard_origin}}/"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/users/{{scenario_managed_user_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "users",
+                    "{{scenario_managed_user_id}}"
+                  ]
+                },
+                "auth": {
+                  "type": "noauth"
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"account_status\": \"suspended\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (!pm.variables.get(\"base_url\")) throw new Error(\"Set base_url first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");",
+                      "if (!pm.variables.get(\"dashboard_origin\")) throw new Error(\"Set dashboard_origin first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");",
+                      "if (!pm.variables.get(\"scenario_managed_user_id\")) throw new Error(\"Set scenario_managed_user_id first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });"
+                    ]
+                  }
+                }
+              ],
+              "id": "45bf773e-e20e-5934-a41f-51002655d178"
+            },
+            {
+              "name": "Activate User",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Origin",
+                    "value": "{{dashboard_origin}}"
+                  },
+                  {
+                    "key": "Referer",
+                    "value": "{{dashboard_origin}}/"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/users/{{scenario_managed_user_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "users",
+                    "{{scenario_managed_user_id}}"
+                  ]
+                },
+                "auth": {
+                  "type": "noauth"
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"account_status\": \"active\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (!pm.variables.get(\"base_url\")) throw new Error(\"Set base_url first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");",
+                      "if (!pm.variables.get(\"dashboard_origin\")) throw new Error(\"Set dashboard_origin first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");",
+                      "if (!pm.variables.get(\"scenario_managed_user_id\")) throw new Error(\"Set scenario_managed_user_id first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });"
+                    ]
+                  }
+                }
+              ],
+              "id": "97895b36-a38b-567e-8cd0-e14f7cf238ff"
+            },
+            {
+              "name": "Remove All User Roles",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Origin",
+                    "value": "{{dashboard_origin}}"
+                  },
+                  {
+                    "key": "Referer",
+                    "value": "{{dashboard_origin}}/"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/users/{{scenario_managed_user_id}}/roles",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "users",
+                    "{{scenario_managed_user_id}}",
+                    "roles"
+                  ]
+                },
+                "auth": {
+                  "type": "noauth"
+                },
+                "description": "Explicitly replaces the role set with an empty array; direct permissions remain unchanged.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"role_ids\": []\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (!pm.variables.get(\"base_url\")) throw new Error(\"Set base_url first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");",
+                      "if (!pm.variables.get(\"dashboard_origin\")) throw new Error(\"Set dashboard_origin first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");",
+                      "if (!pm.variables.get(\"scenario_managed_user_id\")) throw new Error(\"Set scenario_managed_user_id first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                      "pm.test(\"Roles cleared\", function () { pm.expect(pm.response.json().data.roles).to.eql([]); });"
+                    ]
+                  }
+                }
+              ],
+              "id": "2fdbfb22-2af8-5c80-82cd-cd5fc940bc1e"
+            },
+            {
+              "name": "Delete User",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Origin",
+                    "value": "{{dashboard_origin}}"
+                  },
+                  {
+                    "key": "Referer",
+                    "value": "{{dashboard_origin}}/"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/users/{{scenario_managed_user_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "users",
+                    "{{scenario_managed_user_id}}"
+                  ]
+                },
+                "auth": {
+                  "type": "noauth"
+                },
+                "description": "Permanent deletion including owned data. Cannot delete your own account or a more privileged account."
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (!pm.variables.get(\"base_url\")) throw new Error(\"Set base_url first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");",
+                      "if (!pm.variables.get(\"dashboard_origin\")) throw new Error(\"Set dashboard_origin first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");",
+                      "if (!pm.variables.get(\"scenario_managed_user_id\")) throw new Error(\"Set scenario_managed_user_id first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"HTTP 204\", function () { pm.response.to.have.status(204); });"
+                    ]
+                  }
+                }
+              ],
+              "id": "3953133e-0ed6-5c3c-b8f0-ba409bc2367d"
+            },
+            {
+              "name": "Delete Role",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Origin",
+                    "value": "{{dashboard_origin}}"
+                  },
+                  {
+                    "key": "Referer",
+                    "value": "{{dashboard_origin}}/"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/roles/{{scenario_managed_role_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "roles",
+                    "{{scenario_managed_role_id}}"
+                  ]
+                },
+                "auth": {
+                  "type": "noauth"
+                },
+                "description": "Requires manage-roles. Assigned roles cannot be deleted (409); own assigned roles cannot be modified (403)."
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"HTTP 204\", function () { pm.response.to.have.status(204); });",
+                      "const xsrfHeader = pm.response.headers.all().find(h => h.key.toLowerCase() === \"set-cookie\" && h.value.startsWith(\"XSRF-TOKEN=\"));",
+                      "if (xsrfHeader) pm.environment.set(\"xsrf_token\", decodeURIComponent(xsrfHeader.value.split(\";\")[0].slice(\"XSRF-TOKEN=\".length)));"
+                    ]
+                  }
+                }
+              ],
+              "id": "a8af438c-5a42-543e-a487-b00791ada24e"
+            },
+            {
+              "name": "Logout",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Origin",
+                    "value": "{{dashboard_origin}}"
+                  },
+                  {
+                    "key": "Referer",
+                    "value": "{{dashboard_origin}}/"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/auth/logout",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "auth",
+                    "logout"
+                  ]
+                },
+                "auth": {
+                  "type": "noauth"
+                },
+                "description": "Logout"
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"HTTP 204\", function () { pm.response.to.have.status(204); });",
+                      "const xsrfHeader = pm.response.headers.all().find(h => h.key.toLowerCase() === \"set-cookie\" && h.value.startsWith(\"XSRF-TOKEN=\"));",
+                      "if (xsrfHeader) pm.environment.set(\"xsrf_token\", decodeURIComponent(xsrfHeader.value.split(\";\")[0].slice(\"XSRF-TOKEN=\".length)));",
+                      "pm.environment.unset(\"scenario_managed_user_password\");"
+                    ]
+                  }
+                }
+              ],
+              "id": "cbbb7642-a426-541a-961a-a6849f4a0270"
+            }
+          ],
+          "id": "281b7001-c039-5221-b405-36aaf53133f0"
         },
         {
           "name": "Roles and Permissions",

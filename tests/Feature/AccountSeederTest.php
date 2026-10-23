@@ -39,7 +39,7 @@ test('admin seeding creates an active administrator and preserves credentials on
 
     $this->assertDatabaseCount('users', 1);
     expect($admin->fresh()->getAllPermissions()->pluck('name')->sort()->values()->all())->toBe([
-        'access-dashboard', 'manage-content', 'manage-roles', 'publish-content', 'view-analytics', 'view-users',
+        'access-dashboard', 'manage-content', 'manage-roles', 'manage-users', 'publish-content', 'view-analytics', 'view-users',
     ]);
     expect($admin->fresh()->password)->toBe($password);
     expect(Hash::check('Local-test-password-123!', $password))->toBeTrue();
@@ -82,4 +82,16 @@ test('admin seeding respects existing administrator bootstrap protection and rol
     expect(fn () => $this->seed(AdminSeeder::class))->toThrow(ValidationException::class);
     $this->assertDatabaseMissing('users', ['email' => 'admin@example.test']);
     expect($existing->fresh()->getAllPermissions())->toHaveCount(1);
+});
+
+test('explicit local admin seeding upgrades the previously complete demo administrator without changing credentials', function () {
+    $this->seed(AdminSeeder::class);
+    $admin = User::query()->where('email', 'admin@example.test')->firstOrFail();
+    $admin->revokePermissionTo('manage-users');
+    $password = $admin->password;
+
+    $this->seed(AdminSeeder::class);
+
+    expect($admin->fresh()->can('manage-users'))->toBeTrue();
+    expect($admin->fresh()->password)->toBe($password);
 });

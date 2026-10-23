@@ -14,6 +14,9 @@ use Spatie\Permission\Models\Role;
 /** Manage existing web roles transactionally without granting privileges beyond the caller's own. */
 class AdminRoleService
 {
+    /** Share the privilege lock with user role assignment. */
+    public function __construct(private AdminAccessService $access) {}
+
     /** @param array{page?: int, per_page?: int} $input Return a bounded web-role page with eager permissions. */
     public function roles(array $input): LengthAwarePaginator
     {
@@ -41,6 +44,7 @@ class AdminRoleService
     {
         try {
             return DB::transaction(function () use ($actor, $input, $role): Role {
+                $actor = $this->access->lock($actor, 'manage-roles');
                 $role = $role ? Role::query()->where('guard_name', 'web')->lockForUpdate()->findOrFail($role->id) : new Role(['guard_name' => 'web']);
                 $this->authorizeWrite($actor, $role, $input['permissions'] ?? []);
                 if (array_key_exists('name', $input)) {
@@ -62,6 +66,7 @@ class AdminRoleService
     public function delete(User $actor, Role $role): void
     {
         DB::transaction(function () use ($actor, $role): void {
+            $actor = $this->access->lock($actor, 'manage-roles');
             $role = Role::query()->where('guard_name', 'web')->lockForUpdate()->findOrFail($role->id);
             $this->authorizeWrite($actor, $role, []);
             abort_if($role->users()->exists(), 409, 'Assigned roles cannot be deleted.');

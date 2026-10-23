@@ -275,7 +275,7 @@ test('permission seeding is idempotent and does not grant privileges to accounts
     $this->seed(ContentPermissionSeeder::class);
     $this->seed(ContentPermissionSeeder::class);
 
-    $this->assertDatabaseCount('permissions', 6);
+    $this->assertDatabaseCount('permissions', 7);
     expect($user->permissions()->count())->toBe(0);
     expect($user->roles()->count())->toBe(0);
 });

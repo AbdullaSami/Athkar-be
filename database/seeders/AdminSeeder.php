@@ -18,9 +18,12 @@ class AdminSeeder extends Seeder
         DB::transaction(function () use ($accounts, $bootstrap): void {
             $admin = $accounts->account('Demo Administrator', 'admin@example.test');
             if (! $admin->wasRecentlyCreated) {
-                if ($admin->account_status !== AccountStatus::Active || collect(ContentPermissionSeeder::PERMISSIONS)->contains(fn (string $permission): bool => ! $admin->can($permission))) {
+                if ($admin->account_status !== AccountStatus::Active || collect(array_diff(ContentPermissionSeeder::PERMISSIONS, ['manage-users']))->contains(fn (string $permission): bool => ! $admin->can($permission))) {
                     throw new RuntimeException('The demo admin email already belongs to an account without the required active administrator permissions. No changes were made.');
                 }
+
+                (new ContentPermissionSeeder)->run();
+                $admin->givePermissionTo('manage-users');
 
                 return;
             }
