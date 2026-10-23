@@ -22,12 +22,13 @@ class AdminUserService
         return $user->load(['roles' => fn ($query) => $query->where('guard_name', 'web')->orderBy('id')]);
     }
 
-    /** @param array<string, mixed> $data Validated profile fields; role changes use the separate roles endpoint. */
+    /** @param array<string, mixed> $data Validated profile and optional creation roles; existing account roles use the roles endpoint. */
     public function save(User $actor, array $data, ?User $target = null): User
     {
         try {
             return DB::transaction(function () use ($actor, $data, $target): User {
                 $actor = $this->access->lock($actor, 'manage-users');
+                $creating = $target === null;
                 $target = $target ? User::query()->lockForUpdate()->findOrFail($target->id) : new User;
                 if ($target->exists) {
                     $this->access->authorizeTarget($actor, $target);
@@ -45,6 +46,9 @@ class AdminUserService
                     $target->setRememberToken(Str::random(60));
                 }
                 $target->save();
+                if ($creating && array_key_exists('role_ids', $data)) {
+                    $this->assignRoles($actor, $target, $data['role_ids']);
+                }
                 if ($credentialsChanged) {
                     $this->revoke($target);
                     if ($oldEmail !== $target->email) {
@@ -68,16 +72,7 @@ class AdminUserService
             abort_unless($actor->can('manage-roles'), 403);
             $target = User::query()->lockForUpdate()->findOrFail($target->id);
             $this->access->authorizeTarget($actor, $target);
-            $roles = Role::query()->where('guard_name', 'web')->whereIn('id', $roleIds)->orderBy('id')->lockForUpdate()->get();
-            if ($roles->count() !== count($roleIds)) {
-                throw ValidationException::withMessages(['role_ids' => 'One or more roles are unavailable.']);
-            }
-            $held = $actor->getAllPermissions()->where('guard_name', 'web')->pluck('name')->all();
-            foreach ($roles as $role) {
-                abort_if($role->permissions()->where('guard_name', '!=', 'web')->exists()
-                    || array_diff($role->permissions()->pluck('name')->all(), $held) !== [], 403);
-            }
-            $target->syncRoles($roles);
+            $this->assignRoles($actor, $target, $roleIds);
             $target->setRememberToken(Str::random(60));
             $target->save();
             $this->revoke($target);
@@ -98,6 +93,22 @@ class AdminUserService
             $target->syncPermissions([]);
             $target->delete();
         });
+    }
+
+    /** @param list<int> $roleIds Apply only caller-held web-role permissions inside the existing security transaction. */
+    private function assignRoles(User $actor, User $target, array $roleIds): void
+    {
+        abort_unless($actor->can('manage-roles'), 403);
+        $roles = Role::query()->where('guard_name', 'web')->whereIn('id', $roleIds)->orderBy('id')->lockForUpdate()->get();
+        if ($roles->count() !== count($roleIds)) {
+            throw ValidationException::withMessages(['role_ids' => 'One or more roles are unavailable.']);
+        }
+        $held = $actor->getAllPermissions()->where('guard_name', 'web')->pluck('name')->all();
+        foreach ($roles as $role) {
+            abort_if($role->permissions()->where('guard_name', '!=', 'web')->exists()
+                || array_diff($role->permissions()->pluck('name')->all(), $held) !== [], 403);
+        }
+        $target->syncRoles($roles);
     }
 
     /** Revoke mobile tokens, reset proofs and configured database-backed browser sessions. */

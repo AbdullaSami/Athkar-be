@@ -19,7 +19,7 @@ class AdminUserRequest extends StrictAuthRequest
         $action = $this->route()->getActionMethod();
 
         return ($this->user()?->can($action === 'show' ? 'view-users' : 'manage-users') ?? false)
-            && ($action !== 'roles' || $this->user()->can('manage-roles'));
+            && (! ($action === 'roles' || ($action === 'store' && $this->exists('role_ids'))) || $this->user()->can('manage-roles'));
     }
 
     /** @return array<string, array<mixed>> Validate only the fields supported by the selected resource operation. */
@@ -27,8 +27,7 @@ class AdminUserRequest extends StrictAuthRequest
     {
         $action = $this->route()->getActionMethod();
         if ($action === 'roles') {
-            return ['role_ids' => ['present', 'array', 'list', 'max:50'],
-                'role_ids.*' => ['required', 'integer', 'min:1', 'max:999999999999999999', 'distinct', Rule::exists(Role::class, 'id')->where('guard_name', 'web')]];
+            return $this->roleRules(required: true);
         }
         if (! in_array($action, ['store', 'update'], true)) {
             return [];
@@ -42,6 +41,7 @@ class AdminUserRequest extends StrictAuthRequest
         $password = [...($create ? [] : ['sometimes']), ...$this->passwordRules(), 'min:12', 'confirmed'];
 
         return [
+            ...($create ? $this->roleRules(required: false) : []),
             'name' => [$presence, 'required', 'string', 'max:160', new PlainContentText],
             'email' => [$presence, 'required', 'string', 'email:rfc', 'max:254', $unique],
             'age' => [$presence, 'required', 'integer', 'between:1,120'],
@@ -50,6 +50,13 @@ class AdminUserRequest extends StrictAuthRequest
             'password' => $password,
             'password_confirmation' => ['required_with:password', Rule::prohibitedIf(! $this->exists('password')), ...($create ? [] : ['sometimes']), ...$this->passwordRules()],
         ];
+    }
+
+    /** @return array<string, array<mixed>> Creation may omit roles; explicit replacement requires the array. */
+    private function roleRules(bool $required): array
+    {
+        return ['role_ids' => [$required ? 'present' : 'sometimes', 'array', 'list', 'max:50'],
+            'role_ids.*' => ['required', 'integer', 'min:1', 'max:999999999999999999', 'distinct', Rule::exists(Role::class, 'id')->where('guard_name', 'web')]];
     }
 
     /** Reject empty edits; password confirmation cannot stand in for an editable account field. */

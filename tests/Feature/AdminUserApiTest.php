@@ -299,3 +299,73 @@ test('stale actor privileges are rechecked before any account write', function (
         ->toThrow(HttpException::class);
     expect($target->fresh()->name)->toBe($target->name);
 });
+
+test('user creation accepts multiple authorized web roles and returns their assignments', function () {
+    $admin = userAdministrator();
+    $editor = Role::findOrCreate('Editor', 'web');
+    $editor->givePermissionTo('manage-content');
+    $reader = Role::findOrCreate('Reader', 'web');
+    $reader->givePermissionTo('view-users');
+
+    $this->actingAs($admin, 'web')->postJson('/api/v1/admin/users', adminUserPayload(['role_ids' => [$editor->id, $reader->id]]))
+        ->assertCreated()->assertJsonCount(2, 'data.roles')->assertJsonPath('data.roles.0.id', $editor->id);
+
+    $target = User::query()->where('email', 'created@example.test')->firstOrFail();
+    expect($target->hasRole($editor))->toBeTrue();
+    expect($target->hasRole($reader))->toBeTrue();
+    expect($target->can('manage-content'))->toBeTrue();
+    expect($target->permissions()->count())->toBe(0);
+});
+
+test('user creation without role management can omit roles but cannot submit a role array', function () {
+    $admin = userAdministrator(['access-dashboard', 'manage-users']);
+    $this->actingAs($admin, 'web')->postJson('/api/v1/admin/users', adminUserPayload(['role_ids' => []]))->assertForbidden();
+    $this->assertDatabaseMissing('users', ['email' => 'created@example.test']);
+    $this->postJson('/api/v1/admin/users', adminUserPayload())->assertCreated()->assertJsonPath('data.roles', []);
+});
+
+test('user creation accepts an explicit empty role array for authorized role managers', function () {
+    $admin = userAdministrator();
+    $this->actingAs($admin, 'web')->postJson('/api/v1/admin/users', adminUserPayload(['role_ids' => []]))
+        ->assertCreated()->assertJsonPath('data.roles', []);
+});
+
+test('user creation with unheld role permissions rolls back the new account with 403', function () {
+    $admin = userAdministrator();
+    $role = Role::findOrCreate('Publisher', 'web');
+    $role->givePermissionTo('publish-content');
+
+    $this->actingAs($admin, 'web')->postJson('/api/v1/admin/users', adminUserPayload(['role_ids' => [$role->id]]))->assertForbidden();
+
+    $this->assertDatabaseMissing('users', ['email' => 'created@example.test']);
+    $this->assertDatabaseCount('model_has_roles', 0);
+});
+
+test('creation rejects unavailable duplicate malformed and non web roles with 422', function (array $payload, string $field) {
+    $admin = userAdministrator();
+    $role = Role::findOrCreate('Other', 'other');
+    if ($payload === ['other']) {
+        $payload = ['role_ids' => [$role->id]];
+    }
+    $this->actingAs($admin, 'web')->postJson('/api/v1/admin/users', adminUserPayload($payload))
+        ->assertUnprocessable()->assertJsonValidationErrors($field);
+    $this->assertDatabaseMissing('users', ['email' => 'created@example.test']);
+})->with([
+    [['role_ids' => null], 'role_ids'], [['role_ids' => '1'], 'role_ids'],
+    [['role_ids' => [999999]], 'role_ids.0'], [['role_ids' => [1, 1]], 'role_ids.0'],
+    [['role_ids' => ['a' => 1]], 'role_ids'], [['other'], 'role_ids.0'],
+]);
+
+test('roles disappearing before transactional creation leave no new account', function () {
+    $admin = userAdministrator();
+    expect(fn () => app(AdminUserService::class)->save($admin, adminUserPayload(['role_ids' => [999999]])))
+        ->toThrow(ValidationException::class);
+    $this->assertDatabaseMissing('users', ['email' => 'created@example.test']);
+});
+
+test('profile updates still reject inline role assignment', function () {
+    $admin = userAdministrator();
+    $target = User::factory()->create();
+    $this->actingAs($admin, 'web')->patchJson('/api/v1/admin/users/'.$target->id, ['role_ids' => []])
+        ->assertUnprocessable()->assertJsonValidationErrors('role_ids');
+});

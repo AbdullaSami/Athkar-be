@@ -3,7 +3,7 @@
     "_postman_id": "e52842b0-70b9-4518-9ab4-3ba796d18456",
     "name": "Athkar API",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "description": "Import this collection and Athkar.local.postman_environment.json, then select that environment. Set base_url (no trailing slash), mobile credentials and admin credentials locally. Secrets are intentionally empty in exports. Mobile and admin are separate top-level folders. Admin: CSRF Cookie -> Login -> selected request; cookie jar must stay enabled. Mobile: Register/Login captures mobile_token, Create Guest Identity captures guest_token. Create operations capture separate owned IDs. Sample numeric defaults are Quran references only; set public content IDs to existing published records. Set optional media paths from successful uploads. All mutation requests are explicit: do not run the whole collection against production. No requests were executed while creating this collection. Scripts assert success status and capture response values without logging secrets. Postman cookie scripting reference: https://learning.postman.com/latest-v-12/docs/tests-and-scripts/write-scripts/postman-sandbox-reference/pm-cookies\n\nMOBILE TESTING: Guest — No Account Required for anonymous use; Logged In — Mobile Bearer Token for accounts; Public APIs for both. Optional Transfer requires a logged-in account. Runnable Scenarios create unique synthetic accounts and temporary Wird: run one scenario folder against development only. Scenario secrets use separate scenario_* environment variables and are cleared afterward.\nADMIN USERS: Users folder supports CRUD and web-role replacement. Run the independent admin user scenario with an administrator holding manage-users, manage-roles, view-users and manage-content. Run php artisan db:seed --class=ContentPermissionSeeder to define new permissions; explicit local AdminSeeder invocation upgrades the existing complete demo administrator."
+    "description": "Import this collection and Athkar.local.postman_environment.json, then select that environment. Set base_url (no trailing slash), mobile credentials and admin credentials locally. Secrets are intentionally empty in exports. Mobile and admin are separate top-level folders. Admin: CSRF Cookie -> Login -> selected request; cookie jar must stay enabled. Mobile: Register/Login captures mobile_token, Create Guest Identity captures guest_token. Create operations capture separate owned IDs. Sample numeric defaults are Quran references only; set public content IDs to existing published records. Set optional media paths from successful uploads. All mutation requests are explicit: do not run the whole collection against production. No requests were executed while creating this collection. Scripts assert success status and capture response values without logging secrets. Postman cookie scripting reference: https://learning.postman.com/latest-v-12/docs/tests-and-scripts/write-scripts/postman-sandbox-reference/pm-cookies\n\nMOBILE TESTING: Guest — No Account Required for anonymous use; Logged In — Mobile Bearer Token for accounts; Public APIs for both. Optional Transfer requires a logged-in account. Runnable Scenarios create unique synthetic accounts and temporary Wird: run one scenario folder against development only. Scenario secrets use separate scenario_* environment variables and are cleared afterward.\nADMIN USERS: Users folder supports CRUD and web-role replacement. Run the independent admin user scenario with an administrator holding manage-users, manage-roles, view-users and manage-content. Run php artisan db:seed --class=ContentPermissionSeeder to define new permissions; explicit local AdminSeeder invocation upgrades the existing complete demo administrator.\nUSER CREATION ROLES: POST /api/v1/admin/users optionally accepts role_ids. Requires manage-roles as well as manage-users when supplied. Creation and role assignment are atomic. See Admin Dashboard / Users / Create User With Roles. The runnable admin scenario verifies creation-time assignment."
   },
   "item": [
     {
@@ -6210,6 +6210,96 @@
               "id": "8caa5ce5-c795-5305-9b2c-2bfb7c0ea09d"
             },
             {
+              "name": "Create User With Roles",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Origin",
+                    "value": "{{dashboard_origin}}"
+                  },
+                  {
+                    "key": "Referer",
+                    "value": "{{dashboard_origin}}/"
+                  },
+                  {
+                    "key": "X-Requested-With",
+                    "value": "XMLHttpRequest"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/users",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "users"
+                  ]
+                },
+                "auth": {
+                  "type": "noauth"
+                },
+                "description": "Create a user and assign roles atomically. Requires manage-users and manage-roles; only caller-held web-role permissions can be granted. Create/select a role first. Omit role_ids to create an ordinary user, or use [] for no roles. Failures do not leave a partial user.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Managed Test User\",\n  \"email\": \"{{managed_user_email}}\",\n  \"age\": 25,\n  \"phone\": null,\n  \"account_status\": \"active\",\n  \"password\": \"{{managed_user_password}}\",\n  \"password_confirmation\": \"{{managed_user_password}}\",\n  \"role_ids\": [\n    \"{{role_id}}\"\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (!pm.variables.get(\"role_id\")) throw new Error(\"Create or select a web role first and set role_id.\");"
+                    ]
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (!pm.variables.get(\"base_url\")) throw new Error(\"Set base_url first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");",
+                      "if (!pm.variables.get(\"dashboard_origin\")) throw new Error(\"Set dashboard_origin first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");",
+                      "if (!pm.variables.get(\"managed_user_email\")) throw new Error(\"Set managed_user_email first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");",
+                      "if (!pm.variables.get(\"managed_user_password\")) throw new Error(\"Set managed_user_password first; create requests capture IDs. Admin login requires the session cookie and CSRF Cookie request.\");"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });",
+                      "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                      "  pm.environment.set(\"managed_user_id\", pm.response.json().data.id);",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "id": "ee2d3a60-ec81-5120-8e15-3c450ddaeb17"
+            },
+            {
               "name": "Show User",
               "request": {
                 "method": "GET",
@@ -7106,7 +7196,7 @@
               "id": "27551745-9b7a-5c30-bace-c49979a31ec7"
             },
             {
-              "name": "Create User",
+              "name": "Create User With Roles",
               "request": {
                 "method": "POST",
                 "header": [
@@ -7146,10 +7236,10 @@
                 "auth": {
                   "type": "noauth"
                 },
-                "description": "Creates an ordinary active account with no roles. Set a unique scenario_managed_user_email and a 12+ character scenario_managed_user_password.",
+                "description": "Create a user and assign roles atomically. Requires manage-users and manage-roles; only caller-held web-role permissions can be granted. Create/select a role first. Omit role_ids to create an ordinary user, or use [] for no roles. Failures do not leave a partial user.",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"name\": \"Managed Test User\",\n  \"email\": \"{{scenario_managed_user_email}}\",\n  \"age\": 25,\n  \"phone\": null,\n  \"account_status\": \"active\",\n  \"password\": \"{{scenario_managed_user_password}}\",\n  \"password_confirmation\": \"{{scenario_managed_user_password}}\"\n}",
+                  "raw": "{\n  \"name\": \"Managed Test User\",\n  \"email\": \"{{scenario_managed_user_email}}\",\n  \"age\": 25,\n  \"phone\": null,\n  \"account_status\": \"active\",\n  \"password\": \"{{scenario_managed_user_password}}\",\n  \"password_confirmation\": \"{{scenario_managed_user_password}}\",\n  \"role_ids\": [\n    \"{{scenario_managed_role_id}}\"\n  ]\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -7179,12 +7269,13 @@
                       "pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });",
                       "if (pm.response.code >= 200 && pm.response.code < 300) {",
                       "  pm.environment.set(\"scenario_managed_user_id\", pm.response.json().data.id);",
-                      "}"
+                      "}",
+                      "pm.test(\"Role assigned during creation\", function () { pm.expect(pm.response.json().data.roles.map(r => String(r.id))).to.include(String(pm.environment.get(\"scenario_managed_role_id\"))); });"
                     ]
                   }
                 }
               ],
-              "id": "cd0fad95-cce7-5d6a-a3b5-3c459b125428"
+              "id": "d0b7c0cd-244f-5edc-b24c-ae9bc7b6b2e5"
             },
             {
               "name": "Show User",

@@ -16,7 +16,7 @@ class AdminUserController extends Controller
     /** Inject transactional user operations. */
     public function __construct(private AdminUserService $users) {}
 
-    /** Create an ordinary account; privileges are assigned through the explicit roles endpoint. */
+    /** Create an account with optional validated roles in the same transaction. */
     public function store(AdminUserRequest $request): JsonResponse
     {
         return (new AdminUserResource($this->users->save($request->user(), $request->validated())))->response()->setStatusCode(201);
