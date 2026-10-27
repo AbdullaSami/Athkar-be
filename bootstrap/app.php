@@ -30,7 +30,6 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->statefulApi();
         $middleware->trimStrings(except: ['guest_token', 'token', 'id_token', 'text', 'source', 'virtue', 'description', 'explanation']);
         $middleware->redirectGuestsTo(fn (Request $request): ?string => $request->is('api/*') ? null : '/');
         $middleware->web(append: [AuthenticateSession::class], replace: [PreventRequestForgery::class => RequireCsrfToken::class]);
