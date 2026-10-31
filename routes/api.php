@@ -85,7 +85,7 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
     });
 
     // Provide a route for caching all data for the mobile app.
-    Route::get('cache-data', [CacheDataController::class, 'getAllData'])->middleware(['throttle:cache-data'])->name('cache-data');
+    Route::get('cache-data', [CacheDataController::class, 'getAllData'])->name('cache-data');
 });
 
 // Preserve the starter profile URL using the same secured controller.
