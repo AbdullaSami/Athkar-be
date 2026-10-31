@@ -13,9 +13,7 @@ class CacheDataController extends Controller
     public function getAllData()
     {
         $data = [
-            'categories' => Category::all(),
-            'subcategories' => Subcategory::all(),
-            'dhikrs' => Dhikr::all(),
+            'categories' => Category::with('subcategories', 'subcategories.dhikrs')->get(),
             'allah_names' => AllahName::all(),
         ];
 
