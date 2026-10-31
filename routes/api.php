@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\V1\QuranPreferenceController;
 use App\Http\Controllers\Api\V1\QuranReadingProgressController;
 use App\Http\Controllers\Api\V1\QuranSurahController;
 use App\Http\Controllers\Api\V1\SubcategoryController;
+use App\Http\Controllers\Api\V1\CacheDataController;
 use Illuminate\Support\Facades\Route;
 
 Route::pattern('wird', '[1-9][0-9]{0,17}');
@@ -82,6 +83,9 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
         Route::post('auth/logout', [MobileAuthController::class, 'logout'])->name('auth.logout');
         Route::post('auth/logout-all', [MobileAuthController::class, 'logoutAll'])->name('auth.logout-all');
     });
+
+    // Provide a route for caching all data for the mobile app.
+    Route::get('cache-data', [CacheDataController::class, 'getAllData'])->middleware(['throttle:cache-data', 'auth:sanctum', 'mobile.token', 'account.active'])->name('cache-data');
 });
 
 // Preserve the starter profile URL using the same secured controller.
